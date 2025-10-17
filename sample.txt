@@ -4,3 +4,4 @@ fun add(a,b) {
     give a+b;
 }
 out add(x,y);
+out "this is the thing that does the thing with the other thing"

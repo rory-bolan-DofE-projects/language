@@ -25,6 +25,7 @@ public class CLIBase implements Runnable {
             System.out.println("Running " + file);
         try {
             Response resp = ReadAndTokenize.tokenize(new File(new URI(file)));
+
         } catch (IOException | URISyntaxException e) {
             throw new RuntimeException(e);
         }
