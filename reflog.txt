@@ -1,0 +1,2 @@
+0770799 HEAD@{0}: commit: furthered progress in tokenising, and added an exception for incorrect syntax
+478cd19 HEAD@{1}: commit (initial): set up project structure, CLI, and began the process of tokenising including multiple objects. Also, decided on the language's syntax, found in ./sample.txt

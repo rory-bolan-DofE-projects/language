@@ -14,7 +14,7 @@ import java.net.URISyntaxException;
         name = "mycli",
         mixinStandardHelpOptions = true,
         version = "1.0",
-        description = "A simple Java CLI using Picocli"
+        description = "a cli to run my interpreted language"
 )
 public class CLIBase implements Runnable {
 
@@ -24,9 +24,9 @@ public class CLIBase implements Runnable {
     public void run() {
             System.out.println("Running " + file);
         try {
-            Response resp = ReadAndTokenize.tokenize(new File(new URI(file)));
+            TokenObjects.Response resp = ReadAndTokenize.tokenize(new File(file));
 
-        } catch (IOException | URISyntaxException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }

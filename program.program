@@ -1,0 +1,7 @@
+out "super very straight mhm";
+fun a(x,y) {
+    set z = 10;
+    give z;
+}
+out a;
+eof;

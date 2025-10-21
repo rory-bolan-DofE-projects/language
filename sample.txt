@@ -2,6 +2,13 @@ set x = 5;
 set y = 10;
 fun add(a,b) {
     give a+b;
-}
-out add(x,y);
-out "this is the thing that does the thing with the other thing"
+};
+// out add(x,y);
+set z = x+y;
+out z;
+out "this is the thing that does the thing with the other thing";
+out x;
+out 95;
+out add;
+
+eof;
