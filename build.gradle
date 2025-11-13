@@ -4,17 +4,26 @@ plugins {
 }
 
 group = 'app.belgarion.java'
-version = '1.0-SNAPSHOT'
+version = '1.0'
 
 repositories {
     mavenCentral()
 }
 
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
 dependencies {
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     implementation 'info.picocli:picocli:4.7.6'
+    implementation 'org.jetbrains:annotations:24.1.0'
+    implementation 'org.graalvm.polyglot:polyglot:24.1.1'
+    implementation 'org.graalvm.js:js:24.1.1'
 }
 
 test {
@@ -27,14 +36,3 @@ application {
     mainClass = 'app.belgarion.java.CLIBase'
 }
 
-jar {
-    manifest {
-        attributes(
-                'Main-Class': application.mainClass
-        )
-    }
-    from {
-        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
-    }
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-}

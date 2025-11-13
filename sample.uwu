@@ -10,5 +10,6 @@ out "this is the thing that does the thing with the other thing";
 out x;
 out 95;
 out add;
-
+is (5 > 9);
+is (y > x);
 eof;

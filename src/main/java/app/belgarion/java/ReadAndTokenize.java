@@ -1,17 +1,21 @@
 package app.belgarion.java;
 
-import javax.swing.text.html.Option;
+
 import java.io.*;
 import java.util.*;
-
+import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.Value;
+import app.belgarion.java.expr_eval.*;
 class ReadAndTokenize {
     static ArrayList<TokenObjects.Token> tokens = new ArrayList<>();
     static ArrayList<TokenObjects.Function> functions = new ArrayList<>();
     static HashMap<String, TokenObjects.Value> variables = new HashMap<>();
 
 
-    static TokenObjects.Response tokenize(File file) throws IOException {
-
+    public static TokenObjects.Response tokenize(File file) throws IOException {
+        if (!file.getName().endsWith(".uwu")) {
+            throw new TokenObjects.IncorrectSyntaxException("File must end with '.uwu'");
+        }
 
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
@@ -114,9 +118,31 @@ class ReadAndTokenize {
                 }
                 // PRINT STATEMENTS
                 print(chars);
+                // CONDITIONALS
+                if (startsWith(chars, "is")) {
+                    if (chars[3] != '(') throw new TokenObjects.IncorrectSyntaxException("Expected '('");
+                    int index = 4;
+
+                    StringBuilder str = new StringBuilder();
+                    while (index < chars.length && chars[index] != ')') {
+                        str.append(chars[index]);
+                        index++;
+                    }
+                    String string = str.toString().trim();
+                    for (Map.Entry<String, TokenObjects.Value> entry : variables.entrySet()) {
+                        string = string.replaceAll(entry.getKey(), entry.getValue().contents());
+                    }
+                    if (is(string)) {
+                        System.out.println(str + " is true");
+                    } else {
+                        System.out.println(str + " is false");
+                    }
+                }
             }
             if (!EOF)
                 throw new TokenObjects.IncorrectSyntaxException("\"eof;\" required to signify the end of the file");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
         /*
         for (Map.Entry<String, Value> entry : variables.entrySet()) {
@@ -132,7 +158,7 @@ class ReadAndTokenize {
     }
 
 
-    static Optional<Map.Entry<String, TokenObjects.Value>> getVariables(char[] chars) {
+    static Optional<Map.Entry<String, TokenObjects.Value>> getVariables(char[] chars) throws Exception {
         HashMap<String, TokenObjects.Value> variables_temp = new HashMap<>();
         if (startsWith(chars, "set")) {
             int index = 3;
@@ -160,24 +186,15 @@ class ReadAndTokenize {
             } else {
                 finalType = getType(str);
             }
-            if (variable_value.toString().contains("+") || variable_value.toString().contains("-") || variable_value.toString().contains("*") || variable_value.toString().contains("/") || variable_value.toString().contains("%")) {
+            String finalAnswer = variable_value.toString().trim();
+            if (finalAnswer.contains("+") ||finalAnswer.contains("-") || finalAnswer.contains("*") || finalAnswer.contains("/") || finalAnswer.contains("%")) {
                 if (!finalType.equals(TokenObjects.Type.STRING) && !finalType.equals(TokenObjects.Type.BOOLEAN)) {
-                    char oper;
-                    if (variable_value.toString().contains("+")) {
-                        oper = '+';
-                    } else if (variable_value.toString().contains("-")) {
-                        oper = '-';
-                    } else if (variable_value.toString().contains("*")) {
-                        oper = '*';
-                    } else if (variable_value.toString().contains("/")) {
-                        oper = '/';
-                    } else {
-                        oper = '%';
-                    }
+                   Answer ans = Evaluator.run(finalAnswer);
+                    finalAnswer = String.valueOf(ans.answer);
                 }
             }
             String name = variable_name.toString().trim();
-            TokenObjects.Value value = new TokenObjects.Value(finalType, variable_value.toString().trim());
+            TokenObjects.Value value = new TokenObjects.Value(finalType, finalAnswer);
             variables_temp.put(name, value);
             variables.put(name, value);
             return Optional.ofNullable(variables_temp.entrySet().iterator().next());
@@ -212,8 +229,7 @@ class ReadAndTokenize {
         return TokenObjects.Type.STRING;
     }
 
-
-    static void print(char[] chars) {
+    static void print(char[] chars){
         if (startsWith(chars, "out")) {
             int index = 4;
             StringBuilder intOutput = new StringBuilder();
@@ -280,10 +296,10 @@ class ReadAndTokenize {
                             throw new TokenObjects.IncorrectSyntaxException("Expected " + params.length + " params at line " + new String(chars));
                         HashMap<String, TokenObjects.Value> params_temp = new HashMap<>();
 
-                        for (int i = 0; i < params.length; i++) {
+                        for (String param : params) {
                             TokenObjects.Type finalType;
-                            finalType = getType(params[i]);
-                            params_temp.put(params[i].trim(), new TokenObjects.Value(finalType, params[i]));  // HERE
+                            finalType = getType(param);
+                            params_temp.put(param.trim(), new TokenObjects.Value(finalType, param));  // HERE
                         }
 
                     }
@@ -311,7 +327,7 @@ class ReadAndTokenize {
         return true;
     }
     static HashMap<String, TokenObjects.Value> vars_temp = new HashMap<>();
-    static void runLines(char[] line, HashMap<String, TokenObjects.Value> variables) {
+    static void runLines(char[] line, HashMap<String, TokenObjects.Value> variables) throws Exception {
         String str = new String(line);
         for (Map.Entry<String, TokenObjects.Value> entry : variables.entrySet()) {
             if (str.contains(entry.getKey())) {
@@ -324,6 +340,20 @@ class ReadAndTokenize {
         if (str.startsWith("set")) {
             Optional<Map.Entry<String, TokenObjects.Value>> vars = getVariables(line);
             vars.ifPresent(stringValueEntry -> vars_temp.put(stringValueEntry.getKey(), stringValueEntry.getValue()));
+        }
+
+    }
+    static boolean is(String expr)  {
+
+
+        try (Context context = Context.create("js")) {
+            Value result = context.eval("js", expr);
+
+            if (result.isBoolean()) {
+                return result.asBoolean();
+            } else {
+                throw new TokenObjects.IncorrectSyntaxException("Must be boolean expression");
+            }
         }
     }
 
